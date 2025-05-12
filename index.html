@@ -434,7 +434,7 @@
           },
           body: JSON.stringify({
             chat_id: channel,
-            text: `🔗 New URL Shortened\n\n📌 Original: ${mapping.longUrl}\n🔗 Shortened: ${getShortenedUrl(mapping)}\n📊 Clicks: ${mapping.clickCount || 0}`,
+            text: `🔗 New URL Shortened\n\n📌 Original: ${mapping.longUrl || "link.qiyas.cc/"}\n🔗 Shortened: ${getShortenedUrl(mapping) || "link.qiyas.cc/"}\n📊 Clicks: ${mapping.clickCount || 0}`,
             reply_markup: {
               inline_keyboard: [
                 [
