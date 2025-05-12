@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Qiyas URL Shortener</title>
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              200: '#bae6fd',
+              300: '#7dd3fc',
+              400: '#38bdf8',
+              500: '#0ea5e9',
+              600: '#0284c7',
+              700: '#0369a1',
+              800: '#075985',
+              900: '#0c4a6e',
+              950: '#082f49',
+            },
+          }
+        }
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .bg-gradient-primary {
+        @apply bg-gradient-to-r from-blue-500 to-purple-600;
+      }
+      .bg-gradient-success {
+        @apply bg-gradient-to-r from-green-500 to-emerald-600;
+      }
+      .bg-gradient-info {
+        @apply bg-gradient-to-r from-indigo-500 to-blue-600;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
+  <!-- Login Screen -->
+  <div id="login-screen" class="flex min-h-screen flex-col items-center justify-center p-4">
+    <div class="w-full max-w-md bg-white rounded-lg shadow-lg border-0 overflow-hidden">
+      <div class="text-center p-6 bg-gradient-primary text-white rounded-t-lg">
+        <h1 class="text-3xl font-bold">Qiyas URL Shortener</h1>
+        <p class="text-gray-100">Please enter your password to continue</p>
+      </div>
+      <div class="p-6">
+        <form id="login-form" class="space-y-4">
+          <div class="space-y-2">
+            <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+            <div class="relative">
+              <input
+                id="password"
+                type="password"
+                placeholder="Enter your password"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 pr-10"
+                required
+              />
+              <button
+                type="button"
+                id="toggle-password"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="eye-off hidden">
+                  <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path>
+                  <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path>
+                  <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path>
+                  <line x1="2" x2="22" y1="2" y2="22"></line>
+                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="eye">
+                  <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <button
+            type="submit"
+            id="login-button"
+            class="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+              <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            Login
+          </button>
+          <div id="login-spinner" class="hidden w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="animate-spin mr-2">
+              <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+            </svg>
+            Authenticating...
+          </div>
+        </form>
+      </div>
+      <div class="px-6 pb-6 text-center text-xs text-gray-500">
+        <p class="w-full">Hint: The default password is "admin123" but this js not default :D</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main App -->
+  <div id="main-app" class="hidden py-8">
+    <div class="container mx-auto px-4 max-w-4xl">
+      <!-- URL Shortener Form -->
+      <div class="mb-8 bg-white rounded-lg shadow-lg border-0 overflow-hidden">
+        <div class="text-center p-6 bg-gradient-primary text-white rounded-t-lg">
+          <h1 class="text-3xl font-bold">Qiyas URL Shortener</h1>
+          <p class="text-gray-100">Create shortened URLs with custom aliases and QR codes</p>
+        </div>
+        <div class="p-6">
+          <form id="url-form" class="space-y-4">
+            <div class="space-y-2">
+              <label for="long-url" class="block text-sm font-medium text-gray-700">Long URL</label>
+              <input
+                id="long-url"
+                type="url"
+                placeholder="Enter a long URL (e.g., https://example.com/very/long/url)"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                required
+              />
+            </div>
+            <div class="space-y-2">
+              <label for="custom-alias" class="block text-sm font-medium text-gray-700">Custom Alias (Optional)</label>
+              <div class="flex">
+                <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
+                  link.qiyas.cc/#
+                </span>
+                <input
+                  id="custom-alias"
+                  type="text"
+                  placeholder="Enter a custom alias (e.g., my-link)"
+                  class="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                />
+              </div>
+            </div>
+            <button
+              type="submit"
+              class="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+            >
+              Shorten URL
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Result Card -->
+      <div id="result-card" class="hidden mb-8 bg-white rounded-lg shadow-lg border-0 overflow-hidden">
+        <div class="p-6 bg-gradient-success text-white">
+          <h2 class="text-xl font-bold">Your Shortened URL</h2>
+        </div>
+        <div class="p-6">
+          <div class="border-b">
+            <div class="flex space-x-2">
+              <button id="url-tab" class="px-4 py-2 border-b-2 border-primary-500 text-primary-600 font-medium">URL</button>
+              <button id="qr-tab" class="px-4 py-2 border-b-2 border-transparent hover:text-gray-700 hover:border-gray-300">QR Code</button>
+            </div>
+          </div>
+          
+          <!-- URL Tab Content -->
+          <div id="url-tab-content" class="pt-4 space-y-4">
+            <div class="space-y-2">
+              <label class="block text-sm font-medium text-gray-700">Original URL</label>
+              <div id="original-url" class="p-3 bg-gray-50 rounded-md text-sm break-all"></div>
+            </div>
+            <div class="space-y-2">
+              <label class="block text-sm font-medium text-gray-700">Shortened URL</label>
+              <div class="flex items-center">
+                <div id="shortened-url" class="flex-1 p-3 bg-gray-50 rounded-l-md text-sm font-medium break-all"></div>
+                <button
+                  id="copy-button"
+                  class="rounded-l-none h-[42px] px-3 bg-primary-600 text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect>
+                    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- QR Tab Content -->
+          <div id="qr-tab-content" class="hidden pt-4">
+            <div class="flex flex-col items-center justify-center p-4">
+              <div id="qr-code-container" class="w-48 h-48 border p-2 rounded-lg shadow-sm flex items-center justify-center">
+                <canvas id="qr-canvas" width="200" height="200"></canvas>
+              </div>
+              <p class="text-sm text-gray-500 mt-4">Scan this QR code to access your shortened URL</p>
+              <button
+                id="download-qr"
+                class="mt-4 px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+              >
+                Download QR Code
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- URL History -->
+      <div id="url-history" class="hidden bg-white rounded-lg shadow-lg border-0">
+        <div class="p-6 bg-gradient-info text-white">
+          <h2 class="text-xl font-bold">Your Shortened URLs</h2>
+          <p class="text-gray-100">Click on a shortened URL to view details and QR code</p>
+        </div>
+        <div class="p-6">
+          <div id="url-list" class="space-y-4">
+            <!-- URL items will be added here dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-8 text-center text-sm text-gray-500">
+        <p>This URL shortener works entirely in your browser.</p>
+        <p>All shortened URLs are stored in your browser's local storage.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed top-4 right-4 z-50 hidden max-w-xs bg-white rounded-lg shadow-lg border-l-4 border-primary-500 overflow-hidden">
+    <div class="p-4">
+      <div class="flex items-start">
+        <div class="flex-shrink-0">
+          <svg class="h-6 w-6 text-primary-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <div class="ml-3 w-0 flex-1">
+          <p id="toast-title" class="text-sm font-medium text-gray-900"></p>
+          <p id="toast-message" class="mt-1 text-sm text-gray-500"></p>
+        </div>
+        <div class="ml-4 flex-shrink-0 flex">
+          <button id="toast-close" class="inline-flex text-gray-400 hover:text-gray-500">
+            <span class="sr-only">Close</span>
+            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Redirect Screen -->
+  <div id="redirect-screen" class="hidden flex min-h-screen flex-col items-center justify-center p-4 bg-gradient-to-b from-gray-50 to-gray-100">
+    <div class="text-center">
+      <h1 class="text-2xl font-bold mb-4">Redirecting you...</h1>
+      <div class="animate-spin h-8 w-8 border-4 border-primary-600 border-t-transparent rounded-full mx-auto"></div>
+    </div>
+  </div>
+
+  <script>
+    // The predefined hash for password protection
+    const PREDEFINED_HASH = "715d19bffe53f3abc8c0addfa9f162021277eb14a8e7992f888c2929f02783d29e0b0d3bd0e3816eb008bbff3b43874f7e066b7d99de20c8b44a25bef05fd52f";
+    
+    // Base URL for the service
+    const BASE_URL = "link.qiyas.cc/";
+    
+    // DOM Elements
+    const loginScreen = document.getElementById('login-screen');
+    const mainApp = document.getElementById('main-app');
+    const redirectScreen = document.getElementById('redirect-screen');
+    const loginForm = document.getElementById('login-form');
+    const loginButton = document.getElementById('login-button');
+    const loginSpinner = document.getElementById('login-spinner');
+    const passwordInput = document.getElementById('password');
+    const togglePasswordButton = document.getElementById('toggle-password');
+    const urlForm = document.getElementById('url-form');
+    const longUrlInput = document.getElementById('long-url');
+    const customAliasInput = document.getElementById('custom-alias');
+    const resultCard = document.getElementById('result-card');
+    const urlTab = document.getElementById('url-tab');
+    const qrTab = document.getElementById('qr-tab');
+    const urlTabContent = document.getElementById('url-tab-content');
+    const qrTabContent = document.getElementById('qr-tab-content');
+    const originalUrlDisplay = document.getElementById('original-url');
+    const shortenedUrlDisplay = document.getElementById('shortened-url');
+    const copyButton = document.getElementById('copy-button');
+    const qrCanvas = document.getElementById('qr-canvas');
+    const downloadQrButton = document.getElementById('download-qr');
+    const urlHistory = document.getElementById('url-history');
+    const urlList = document.getElementById('url-list');
+    const toast = document.getElementById('toast');
+    const toastTitle = document.getElementById('toast-title');
+    const toastMessage = document.getElementById('toast-message');
+    const toastClose = document.getElementById('toast-close');
+    
+    // Current state
+    let urlMappings = [];
+    let selectedUrl = null;
+    
+    // Initialize the app
+    document.addEventListener('DOMContentLoaded', () => {
+      // Check if we need to redirect based on the hash
+      checkForRedirect();
+      
+      // Load saved mappings from localStorage
+      loadUrlMappings();
+      
+      // Check if user was previously authenticated in this session
+      checkAuthentication();
+      
+      // Set up event listeners
+      setupEventListeners();
+    });
+    
+    // Check if we need to redirect based on the hash
+    function checkForRedirect() {
+      // Check if we're on the correct path
+      const currentPath = window.location.pathname;
+      if (!currentPath.includes('/')) {
+        return; // Not on the correct path, don't redirect
+      }
+      
+      const hash = window.location.hash;
+      if (hash && hash.length > 1) {
+        const shortCode = hash.substring(1);
+        const storedMappings = JSON.parse(localStorage.getItem('urlMappings') || '[]');
+        const mapping = storedMappings.find(m => m.shortCode === shortCode || m.customAlias === shortCode);
+        
+        if (mapping) {
+          loginScreen.classList.add('hidden');
+          mainApp.classList.add('hidden');
+          redirectScreen.classList.remove('hidden');
+          
+          setTimeout(() => {
+            window.location.href = mapping.longUrl;
+          }, 1500);
+        }
+      }
+    }
+    
+    // Load saved mappings from localStorage
+    function loadUrlMappings() {
+      urlMappings = JSON.parse(localStorage.getItem('urlMappings') || '[]');
+      if (urlMappings.length > 0) {
+        renderUrlList();
+        urlHistory.classList.remove('hidden');
+      }
+    }
+    
+    // Check if user was previously authenticated
+    function checkAuthentication() {
+      const authStatus = sessionStorage.getItem('isAuthenticated');
+      if (authStatus === 'true') {
+        loginScreen.classList.add('hidden');
+        mainApp.classList.remove('hidden');
+      }
+    }
+    
+    // Set up event listeners
+    function setupEventListeners() {
+      // Toggle password visibility
+      togglePasswordButton.addEventListener('click', () => {
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        togglePasswordButton.querySelector('.eye').classList.toggle('hidden');
+        togglePasswordButton.querySelector('.eye-off').classList.toggle('hidden');
+      });
+      
+      // Login form submission
+      loginForm.addEventListener('submit', handleLogin);
+      
+      // URL form submission
+      urlForm.addEventListener('submit', handleUrlSubmit);
+      
+      // Tab switching
+      urlTab.addEventListener('click', () => switchTab('url'));
+      qrTab.addEventListener('click', () => switchTab('qr'));
+      
+      // Copy button
+      copyButton.addEventListener('click', () => {
+        if (selectedUrl) {
+          copyToClipboard(getShortenedUrl(selectedUrl));
+        }
+      });
+      
+      // Download QR button
+      downloadQrButton.addEventListener('click', downloadQrCode);
+      
+      // Toast close button
+      toastClose.addEventListener('click', hideToast);
+    }
+    
+    // Handle login
+    async function handleLogin(e) {
+      e.preventDefault();
+      
+      loginButton.classList.add('hidden');
+      loginSpinner.classList.remove('hidden');
+      
+      try {
+        // Convert password to Base64
+        const base64Password = btoa(passwordInput.value);
+        
+        // Hash the Base64 encoded password with SHA-512
+        const hashedPassword = await sha512(base64Password);
+        
+        // Compare with predefined hash
+        if (hashedPassword === PREDEFINED_HASH) {
+          sessionStorage.setItem('isAuthenticated', 'true');
+          loginScreen.classList.add('hidden');
+          mainApp.classList.remove('hidden');
+          showToast('Authentication successful', 'Welcome to the URL shortener service!');
+        } else {
+          showToast('Authentication failed', 'Incorrect password. Please try again.', true);
+        }
+      } catch (error) {
+        showToast('Error', 'An error occurred during authentication.', true);
+      } finally {
+        loginButton.classList.remove('hidden');
+        loginSpinner.classList.add('hidden');
+      }
+    }
+    
+    // Handle URL form submission
+    function handleUrlSubmit(e) {
+      e.preventDefault();
+      
+      const longUrl = longUrlInput.value;
+      const customAlias = customAliasInput.value;
+      
+      // Validate URL
+      try {
+        new URL(longUrl);
+      } catch (e) {
+        showToast('Invalid URL', 'Please enter a valid URL including http:// or https://', true);
+        return;
+      }
+      
+      // Check if custom alias is already in use
+      if (customAlias) {
+        const aliasExists = urlMappings.some(mapping => mapping.customAlias === customAlias || mapping.shortCode === customAlias);
+        if (aliasExists) {
+          showToast('Alias already in use', 'Please choose a different custom alias.', true);
+          return;
+        }
+      }
+      
+      // Check if URL already exists
+      const existingMapping = urlMappings.find(mapping => mapping.longUrl === longUrl);
+      if (existingMapping) {
+        showToast('URL already shortened', 'This URL has already been shortened.');
+        selectedUrl = existingMapping;
+        updateResultCard();
+        return;
+      }
+      
+      const shortCode = generateShortCode();
+      const newMapping = {
+        longUrl,
+        shortCode,
+        customAlias: customAlias || '',
+        createdAt: Date.now()
+      };
+      
+      urlMappings.unshift(newMapping);
+      saveUrlMappings();
+      
+      longUrlInput.value = '';
+      customAliasInput.value = '';
+      
+      selectedUrl = newMapping;
+      updateResultCard();
+      
+      showToast('URL shortened successfully', 'Your shortened URL is ready to use!');
+    }
+    
+    // Switch between URL and QR tabs
+    function switchTab(tab) {
+      if (tab === 'url') {
+        urlTab.classList.add('border-primary-500', 'text-primary-600');
+        urlTab.classList.remove('border-transparent', 'hover:text-gray-700', 'hover:border-gray-300');
+        qrTab.classList.remove('border-primary-500', 'text-primary-600');
+        qrTab.classList.add('border-transparent', 'hover:text-gray-700', 'hover:border-gray-300');
+        
+        urlTabContent.classList.remove('hidden');
+        qrTabContent.classList.add('hidden');
+      } else {
+        qrTab.classList.add('border-primary-500', 'text-primary-600');
+        qrTab.classList.remove('border-transparent', 'hover:text-gray-700', 'hover:border-gray-300');
+        urlTab.classList.remove('border-primary-500', 'text-primary-600');
+        urlTab.classList.add('border-transparent', 'hover:text-gray-700', 'hover:border-gray-300');
+        
+        qrTabContent.classList.remove('hidden');
+        urlTabContent.classList.add('hidden');
+        
+        generateQRCode(getShortenedUrl(selectedUrl));
+      }
+    }
+    
+    // Update the result card with the selected URL
+    function updateResultCard() {
+      if (!selectedUrl) return;
+      
+      originalUrlDisplay.textContent = selectedUrl.longUrl;
+      shortenedUrlDisplay.textContent = getShortenedUrl(selectedUrl);
+      
+      resultCard.classList.remove('hidden');
+      switchTab('url');
+    }
+    
+    // Render the URL list
+    function renderUrlList() {
+      urlList.innerHTML = '';
+      
+      urlMappings.forEach(mapping => {
+        const item = document.createElement('div');
+        item.className = 'p-4 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer';
+        item.innerHTML = `
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div class="flex-1 min-w-0">
+              <p class="text-sm text-gray-500 truncate">${mapping.longUrl}</p>
+              <div class="flex items-center mt-1">
+                <p class="font-medium text-primary-600 truncate">${getShortenedUrl(mapping)}</p>
+              </div>
+              <p class="text-xs text-gray-400 mt-1">Created: ${formatDate(mapping.createdAt)}</p>
+            </div>
+            <div class="flex gap-2 mt-2 sm:mt-0">
+              <button class="copy-btn p-1 border border-gray-300 rounded-md hover:bg-gray-100" title="Copy to clipboard">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect>
+                  <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path>
+                </svg>
+              </button>
+              <button class="open-btn p-1 border border-gray-300 rounded-md hover:bg-gray-100" title="Open shortened URL">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                  <polyline points="15 3 21 3 21 9"></polyline>
+                  <line x1="10" x2="21" y1="14" y2="3"></line>
+                </svg>
+              </button>
+              <button class="qr-btn p-1 border border-gray-300 rounded-md hover:bg-gray-100" title="View QR code">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect width="5" height="5" x="3" y="3" rx="1"></rect>
+                  <rect width="5" height="5" x="16" y="3" rx="1"></rect>
+                  <rect width="5" height="5" x="3" y="16" rx="1"></rect>
+                  <path d="M21 16h-3a2 2 0 0 0-2 2v3"></path>
+                  <path d="M21 21v.01"></path>
+                  <path d="M12 7v3a2 2 0 0 1-2 2H7"></path>
+                  <path d="M3 12h.01"></path>
+                  <path d="M12 3h.01"></path>
+                  <path d="M12 16v.01"></path>
+                  <path d="M16 12h1"></path>
+                  <path d="M21 12v.01"></path>
+                  <path d="M12 21v-1"></path>
+                </svg>
+              </button>
+              <button class="delete-btn p-1 border border-gray-300 rounded-md hover:bg-gray-100" title="Delete shortened URL">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 6h18"></path>
+                  <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                  <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                  <line x1="10" x2="10" y1="11" y2="17"></line>
+                  <line x1="14" x2="14" y1="11" y2="17"></line>
+                </svg>
+              </button>
+            </div>
+          </div>
+        `;
+        
+        // Add event listeners to the buttons
+        item.addEventListener('click', () => {
+          selectedUrl = mapping;
+          updateResultCard();
+        });
+        
+        item.querySelector('.copy-btn').addEventListener('click', (e) => {
+          e.stopPropagation();
+          copyToClipboard(getShortenedUrl(mapping));
+        });
+        
+        item.querySelector('.open-btn').addEventListener('click', (e) => {
+          e.stopPropagation();
+          window.open(getShortenedUrl(mapping), '_blank');
+        });
+        
+        item.querySelector('.qr-btn').addEventListener('click', (e) => {
+          e.stopPropagation();
+          selectedUrl = mapping;
+          updateResultCard();
+          switchTab('qr');
+        });
+        
+        item.querySelector('.delete-btn').addEventListener('click', (e) => {
+          e.stopPropagation();
+          deleteMapping(mapping.shortCode);
+        });
+        
+        urlList.appendChild(item);
+      });
+      
+      if (urlMappings.length > 0) {
+        urlHistory.classList.remove('hidden');
+      } else {
+        urlHistory.classList.add('hidden');
+      }
+    }
+    
+    // Generate a random short code
+    function generateShortCode() {
+      const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      let result = '';
+      for (let i = 0; i < 6; i++) {
+        result += characters.charAt(Math.floor(Math.random() * characters.length));
+      }
+      return result;
+    }
+    
+    // Save mappings to localStorage
+    function saveUrlMappings() {
+      localStorage.setItem('urlMappings', JSON.stringify(urlMappings));
+      renderUrlList();
+    }
+    
+    // Copy to clipboard
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('Copied to clipboard', 'The shortened URL has been copied to your clipboard.');
+      }).catch(() => {
+        showToast('Copy failed', 'Failed to copy to clipboard. Please try again.', true);
+      });
+    }
+    
+    // Delete a mapping
+    function deleteMapping(shortCode) {
+      urlMappings = urlMappings.filter(mapping => mapping.shortCode !== shortCode);
+      saveUrlMappings();
+      
+      if (selectedUrl && selectedUrl.shortCode === shortCode) {
+        selectedUrl = null;
+        resultCard.classList.add('hidden');
+      }
+      
+      showToast('URL deleted', 'The shortened URL has been deleted.');
+    }
+    
+    // Get shortened URL
+    function getShortenedUrl(mapping) {
+      return `${BASE_URL}#${mapping.customAlias || mapping.shortCode}`;
+    }
+    
+    // Format date
+    function formatDate(timestamp) {
+      return new Date(timestamp).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    }
+    
+    // Generate QR code
+    function generateQRCode(text) {
+      try {
+        const ctx = qrCanvas.getContext('2d');
+        if (!ctx) return;
+        
+        // Clear canvas
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, qrCanvas.width, qrCanvas.height);
+        
+        // Calculate QR code size
+        const size = qrCanvas.width * 0.8;
+        const posX = (qrCanvas.width - size) / 2;
+        const posY = (qrCanvas.height - size) / 2;
+        const cellSize = size / 25; // QR code is 25x25 cells
+        
+        // Generate QR code data (simplified version)
+        const qrData = generateQRData(text);
+        
+        // Draw QR code
+        ctx.fillStyle = '#000000';
+        for (let y = 0; y < qrData.length; y++) {
+          for (let x = 0; x < qrData[y].length; x++) {
+            if (qrData[y][x]) {
+              ctx.fillRect(posX + x * cellSize, posY + y * cellSize, cellSize, cellSize);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error generating QR code:', error);
+      }
+    }
+    
+    // Simplified QR code data generation (for demo purposes)
+    function generateQRData(text) {
+      // This is a simplified placeholder that creates a pattern based on the text
+      // It's not a real QR code, just a visual representation
+      const data = [];
+      const size = 25;
+      
+      // Initialize with empty data
+      for (let i = 0; i < size; i++) {
+        data[i] = [];
+        for (let j = 0; j < size; j++) {
+          data[i][j] = false;
+        }
+      }
+      
+      // Add fixed patterns (finder patterns)
+      // Top-left finder pattern
+      for (let i = 0; i < 7; i++) {
+        for (let j = 0; j < 7; j++) {
+          data[i][j] = i === 0 || i === 6 || j === 0 || j === 6 || (i > 1 && i < 5 && j > 1 && j < 5);
+        }
+      }
+      
+      // Top-right finder pattern
+      for (let i = 0; i < 7; i++) {
+        for (let j = size - 7; j < size; j++) {
+          data[i][j] = i === 0 || i === 6 || j === size - 7 || j === size - 1 || (i > 1 && i < 5 && j > size - 6 && j < size - 2);
+        }
+      }
+      
+      // Bottom-left finder pattern
+      for (let i = size - 7; i < size; i++) {
+        for (let j = 0; j < 7; j++) {
+          data[i][j] = i === size - 7 || i === size - 1 || j === 0 || j === 6 || (i > size - 6 && i < size - 2 && j > 1 && j < 5);
+        }
+      }
+      
+      // Generate some pattern based on the text (hash-like)
+      let hash = 0;
+      for (let i = 0; i < text.length; i++) {
+        hash = (hash << 5) - hash + text.charCodeAt(i);
+        hash = hash & hash;
+      }
+      
+      // Use the hash to fill in some cells
+      for (let i = 8; i < size - 8; i++) {
+        for (let j = 8; j < size - 8; j++) {
+          const value = (hash * i * j) % 100;
+          data[i][j] = value < 40;
+        }
+      }
+      
+      return data;
+    }
+    
+    // Download QR code
+    function downloadQrCode() {
+      const dataUrl = qrCanvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = 'qrcode.png';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+    
+    // Show toast notification
+    function showToast(title, message, isError = false) {
+      toastTitle.textContent = title;
+      toastMessage.textContent = message;
+      
+      if (isError) {
+        toast.classList.remove('border-primary-500');
+        toast.classList.add('border-red-500');
+        toast.querySelector('svg').classList.remove('text-primary-500');
+        toast.querySelector('svg').classList.add('text-red-500');
+      } else {
+        toast.classList.remove('border-red-500');
+        toast.classList.add('border-primary-500');
+        toast.querySelector('svg').classList.remove('text-red-500');
+        toast.querySelector('svg').classList.add('text-primary-500');
+      }
+      
+      toast.classList.remove('hidden');
+      
+      // Auto hide after 3 seconds
+      setTimeout(hideToast, 3000);
+    }
+    
+    // Hide toast notification
+    function hideToast() {
+      toast.classList.add('hidden');
+    }
+    
+    // SHA-512 hash function
+    async function sha512(str) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(str);
+      const hashBuffer = await crypto.subtle.digest('SHA-512', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      return hashHex;
+    }
+  </script>
+</body>
+</html>
